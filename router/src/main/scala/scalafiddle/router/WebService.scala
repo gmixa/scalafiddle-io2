@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.UUID
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
-
 import akka.actor._
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
@@ -15,17 +14,16 @@ import akka.http.scaladsl.model.ws.Message
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern._
-import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Flow
 import akka.util.Timeout
 import ch.megard.akka.http.cors.scaladsl.CorsDirectives
 import ch.megard.akka.http.cors.scaladsl.settings.CorsSettings
 import kamon.Kamon
 import kamon.metric.instrument.Counter
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
 import upickle.default._
 
-import scala.concurrent.Future
+import scala.concurrent.{ExecutionContextExecutor, Future}
 import scala.concurrent.duration._
 import scalafiddle.router.cache.Cache
 import scalafiddle.router.frontend.Static
@@ -47,13 +45,12 @@ class WebService(system: ActorSystem, cache: Cache, compilerManager: ActorRef) {
   import HttpCharsets._
   import MediaTypes._
 
-  implicit val actorSystem  = system
-  implicit val timeout      = Timeout(30.seconds)
-  implicit val materializer = ActorMaterializer()
-  implicit val ec           = system.dispatcher
-  val log                   = LoggerFactory.getLogger(getClass)
+  implicit val actorSystem: ActorSystem     = system
+  implicit val timeout: Timeout             = Timeout(30.seconds)
+  implicit val ec: ExecutionContextExecutor = system.dispatcher
+  val log: Logger                           = LoggerFactory.getLogger(getClass)
 
-  val corsSettings =
+  val corsSettings: CorsSettings =
     CorsSettings.defaultSettings.withAllowedOrigins(HttpOriginRange(Config.corsOrigins.map(HttpOrigin(_)): _*))
 
   type ParamValidator = Map[String, Validator]
@@ -77,7 +74,7 @@ class WebService(system: ActorSystem, cache: Cache, compilerManager: ActorRef) {
     "opt"        -> ListValidator("fast", "full")
   )
 
-  val cacheCounters = Seq(
+  val cacheCounters: Map[String, CacheCounter] = Seq(
     "compile",
     "embed",
     "complete"
@@ -270,7 +267,7 @@ class WebService(system: ActorSystem, cache: Cache, compilerManager: ActorRef) {
                             case Left(error) =>
                               HttpResponse(StatusCodes.BadRequest, entity = error)
                           } recover {
-                          case e: Exception =>
+                          case _: Exception =>
                             compilerManager ! CancelCompilation(compileId)
                             HttpResponse(StatusCodes.InternalServerError, entity = "Internal error")
                         }
@@ -369,7 +366,7 @@ class WebService(system: ActorSystem, cache: Cache, compilerManager: ActorRef) {
   }
 
   val compilerRoute: Route = {
-    (path("compiler") & parameters(('secret, 'scalaVersion, 'scalaJSVersion))) { (secret, scalaVersion, scalaJSVersion) =>
+    (path("compiler") & parameters('secret, 'scalaVersion, 'scalaJSVersion)) { (secret, scalaVersion, scalaJSVersion) =>
       val validParams =
         secret == Config.secret &&
           Config.scalaVersions.contains(scalaVersion) &&
@@ -380,11 +377,10 @@ class WebService(system: ActorSystem, cache: Cache, compilerManager: ActorRef) {
         complete(HttpResponse(StatusCodes.Forbidden))
     }
   }
-  val route = extRoute ~ compilerRoute
+  val route: Route = extRoute ~ compilerRoute
 
-  val bindingFuture = Http().bindAndHandle(route, Config.interface, Config.port)
-
-  bindingFuture map { binding =>
+  val bindingFuture: Future[Http.ServerBinding] = Http().newServerAt(Config.interface, Config.port).bind(route)
+  bindingFuture map { _ =>
     log.info(s"Scala Fiddle router ${Config.version} at ${Config.interface}:${Config.port}")
   } recover {
     case ex =>

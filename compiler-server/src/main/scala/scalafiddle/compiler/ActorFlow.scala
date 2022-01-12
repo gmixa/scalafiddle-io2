@@ -5,7 +5,7 @@ package scalafiddle.compiler
 
 import akka.actor._
 import akka.stream.scaladsl.{Flow, Keep, Sink, Source}
-import akka.stream.{Materializer, OverflowStrategy}
+import akka.stream.{CompletionStrategy, Materializer, OverflowStrategy}
 
 /**
   * Provides a flow that is handled by an actor.
@@ -38,7 +38,18 @@ object ActorFlow {
   )(implicit factory: ActorRefFactory, mat: Materializer): Flow[In, Out, _] = {
 
     val (outActor, publisher) = Source
-      .actorRef[Out](bufferSize, overflowStrategy)
+      .actorRef[Out](
+        {
+          case akka.actor.Status.Success(s: CompletionStrategy)                              => s
+          case akka.actor.Status.Success(_)                                                  => CompletionStrategy.draining
+          case akka.actor.Status.Success                                                     => CompletionStrategy.draining
+        }: PartialFunction[Any, CompletionStrategy], { case akka.actor.Status.Failure(cause) => cause }: PartialFunction[
+          Any,
+          Throwable
+        ],
+        bufferSize,
+        overflowStrategy
+      )
       .toMat(Sink.asPublisher(false))(Keep.both)
       .run()
 
@@ -64,7 +75,8 @@ object ActorFlow {
             super.postStop()
           }
         })),
-        Status.Success(())
+        Status.Success(()),
+        ex => Status.Failure(ex)
       ),
       Source.fromPublisher(publisher)
     )

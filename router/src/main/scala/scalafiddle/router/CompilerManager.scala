@@ -28,7 +28,7 @@ class CompilerManager extends Actor with ActorLogging {
   var compilerQueue      = mutable.Queue.empty[(CompilerRequest, ActorRef)]
   val compilationPending = mutable.Map.empty[String, ActorRef]
   var currentLibs        = Map.empty[(String, String), Set[ExtLib]]
-  var compilerTimer      = context.system.scheduler.schedule(5.minute, 1.minute, context.self, CheckCompilers)
+  var compilerTimer      = context.system.scheduler.scheduleWithFixedDelay(5.minute, 1.minute, context.self, CheckCompilers)
   val dependencyRE       = """ *// \$FiddleDependency (.+)""".r
   val scalaVersionRE     = """ *// \$ScalaVersion (.+)""".r
   val scalaJSVersionRE   = """ *// \$ScalaJSVersion (.+)""".r

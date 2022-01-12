@@ -4,7 +4,6 @@ import java.util.UUID
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.http.scaladsl.model.ws.TextMessage
-import akka.stream.ActorMaterializer
 import scalafiddle.shared._
 import upickle.default._
 
@@ -18,12 +17,11 @@ class CompilerService(out: ActorRef, manager: ActorRef, scalaVersion: String, sc
     extends Actor
     with ActorLogging {
 
-  implicit val materializer = ActorMaterializer()(context)
   import context.dispatcher
-
-  val id       = UUID.randomUUID().toString
-  var lastSeen = System.currentTimeMillis()
-  val watchdog = context.system.scheduler.schedule(1.minutes, 1.minutes, self, WatchCompiler)
+  implicit val system = context.system
+  val id              = UUID.randomUUID().toString
+  var lastSeen        = System.currentTimeMillis()
+  val watchdog        = context.system.scheduler.scheduleWithFixedDelay(1.minutes, 1.minutes, self, WatchCompiler)
 
   override def preStart(): Unit = {
     super.preStart()

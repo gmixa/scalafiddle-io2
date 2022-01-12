@@ -1,8 +1,7 @@
 package scalafiddle.compiler
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Cancellable, PoisonPill, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, ActorSystem, Cancellable, PoisonPill, Props}
 import akka.http.scaladsl.model.ws.TextMessage
-import akka.stream.ActorMaterializer
 import kamon.Kamon
 import kamon.metric.instrument.Histogram
 import upickle.default._
@@ -11,14 +10,13 @@ import scala.collection.mutable
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scalafiddle.shared._
-
 import ScalaJSCompat.IRFile
 
 case object WatchPong
 
 class CompileActor(out: ActorRef, manager: ActorRef) extends Actor with ActorLogging {
   import context.dispatcher
-  implicit val materializer = ActorMaterializer()(context)
+  implicit val system: ActorSystem = context.system
 
   var timer: Cancellable             = _
   var pongTimer: Cancellable         = _
@@ -34,8 +32,8 @@ class CompileActor(out: ActorRef, manager: ActorRef) extends Actor with ActorLog
 
   override def preStart(): Unit = {
     log.debug("Compiler actor starting")
-    timer = context.system.scheduler.schedule(30.seconds, 20.seconds, context.self, Ping)
-    pongTimer = context.system.scheduler.schedule(1.minute, 1.minute, context.self, WatchPong)
+    timer = context.system.scheduler.scheduleWithFixedDelay(30.seconds, 20.seconds, context.self, Ping)
+    pongTimer = context.system.scheduler.scheduleWithFixedDelay(1.minute, 1.minute, context.self, WatchPong)
     super.preStart()
   }
 

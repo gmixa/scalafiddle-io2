@@ -5,7 +5,7 @@ import Settings._
 // shadow sbt-scalajs' crossProject and CrossType from Scala.js 0.6.x
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaJS06xVersion = "0.6.31"
+val scalaJS06xVersion = "0.6.33"
 val scalaJS06xCrossVersion = CrossVersion.binaryWith(prefix = "sjs0.6_", suffix = "")
 
 val scalaJS1xVersion = "1.0.0"
@@ -18,11 +18,11 @@ def scalaJSBinVersion(scalaJSVersion: String): String =
 inThisBuild(Def.settings(
   scalafmtOnCompile := true,
   scalacOptions := scalacArgs,
-  scalaVersion := "2.12.10",
+  scalaVersion := "2.12.13",
   version := versions.fiddle,
 ))
 
-val crossVersions = crossScalaVersions := Seq("2.12.10", "2.11.12")
+val crossVersions = crossScalaVersions := Seq("2.12.13", "2.11.12")
 
 lazy val root = project
   .in(file("."))

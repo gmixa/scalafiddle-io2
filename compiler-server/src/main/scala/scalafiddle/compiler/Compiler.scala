@@ -57,7 +57,8 @@ class Compiler(libManager: LibraryManager, code: String) { self =>
         val settings = new Settings
         settings.outputDirs.setSingleOutput(vd)
         settings.processArgumentString("-Ypresentation-any-thread -Ypartial-unification")
-        GlobalInitCompat.initInteractiveGlobal(settings, new StoreReporter, libManager.compilerLibraries(extLibs))
+        GlobalInitCompat
+          .initInteractiveGlobal(settings, new StoreReporter(new Settings()), libManager.compilerLibraries(extLibs))
       }
     )
 
@@ -89,7 +90,7 @@ class Compiler(libManager: LibraryManager, code: String) { self =>
       extLibs, {
         val settings = new Settings
         settings.processArgumentString("-Ydebug -Ypartial-unification -Ylog-classpath")
-        GlobalInitCompat.initGlobal(settings, new StoreReporter, libManager.compilerLibraries(extLibs))
+        GlobalInitCompat.initGlobal(settings, new StoreReporter(new Settings()), libManager.compilerLibraries(extLibs))
       }
     )
 

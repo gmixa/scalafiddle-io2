@@ -5,7 +5,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, WebSocketRequest}
 import akka.stream.scaladsl.Flow
-import akka.stream.{ActorMaterializer, OverflowStrategy}
+import akka.stream.OverflowStrategy
 import kamon.Kamon
 
 import scala.concurrent.duration._
@@ -15,8 +15,7 @@ case object CompilerTerminated
 case object ConnectRouter
 
 class Manager extends Actor with ActorLogging {
-  implicit val system       = context.system
-  implicit val materializer = ActorMaterializer()
+  implicit val system = context.system
   import context.dispatcher
 
   def connect(): Unit = {

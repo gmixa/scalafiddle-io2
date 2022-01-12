@@ -5,7 +5,6 @@ import java.nio.channels.{FileLock, OverlappingFileLockException}
 import java.nio.file.Paths
 
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
 import org.apache.maven.artifact.versioning.ComparableVersion
 import org.slf4j.LoggerFactory
 
@@ -23,9 +22,8 @@ import ScalaJSCompat._
   * scala-compile and scalajs-tools
   */
 class LibraryManager(val depLibs: Seq[ExtLib]) {
-  implicit val system       = ActorSystem()
-  implicit val materializer = ActorMaterializer()
-  implicit val ec           = system.dispatcher
+  implicit val system = ActorSystem()
+  implicit val ec     = system.dispatcher
 
   val log     = LoggerFactory.getLogger(getClass)
   val timeout = 60.seconds
