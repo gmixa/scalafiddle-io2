@@ -20,7 +20,7 @@ object Settings {
     val fiddle        = "1.2.9"
     val scalatest     = "3.0.3"
     val macroParadise = "2.1.1"
-    val kindProjector = "0.9.6"
+    val kindProjector = "0.9.10"
     val akka          = "2.6.18"
     val akkaHttp      = "10.2.7"
     val upickle       = "0.4.4"
@@ -47,7 +47,7 @@ object Settings {
   )
 
   val logging = Seq(
-    "net.logstash.logback" % "logstash-logback-encoder" % "5.0",
-    "ch.qos.logback"       % "logback-classic"          % "1.2.3"
+    "net.logstash.logback" % "logstash-logback-encoder" % "7.0.1",
+    "ch.qos.logback"       % "logback-classic"          % "1.2.10"
   )
 }
