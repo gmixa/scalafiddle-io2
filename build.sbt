@@ -34,7 +34,12 @@ lazy val root = project
 
 lazy val shared = crossProject(JSPlatform, JVMPlatform)
   .crossType(CrossType.Pure)
-  .settings(crossVersions)
+  .settings(crossVersions,
+    libraryDependencies ++= Seq(
+      "com.lihaoyi"   %% "upickle"   % versions.upickle,
+      "org.scalatest" %%% "scalatest" % versions.scalatest % "test",
+      )
+  )
 
 lazy val client = project
   .enablePlugins(ScalaJSPlugin)
